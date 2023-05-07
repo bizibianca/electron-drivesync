@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"
+    />
+
+    <link href="css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/materialize.min.css" />
+    <link rel="stylesheet" href="css/style.css" /> -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+      integrity="sha384-56AX8X0luydmkuLAh6UduxFbUW8Eh2i+YJ9gWWx8X2QoQri33AUR7VbG5f8XI2TF"
+      crossorigin="anonymous"
+    />
+  </head>
+  <body style="user-select: none; -webkit-app-region: drag">
+    <div class="card-body d-flex flex-column flex-center">
+      <div class="mb-1">
+        <h1 class="fw-semibold text-gray-800 text-center lh-lg">
+          HM Drive
+          <span class="fw-bolder">Sync</span>
+        </h1>
+
+        <div class="py-1 text-center">
+          <img
+            src="assets/media/5.png"
+            class="theme-light-show w-200px"
+            alt=""
+          />
+        </div>
+      </div>
+
+      <div class="text-center mb-1">
+        <button
+          type="button"
+          class="btn btn-primary"
+          data-bs-toggle="modal"
+          data-bs-target="#kt_modal_upload"
+          id="sync-btn"
+        >
+          <span class="svg-icon svg-icon-2">
+            <svg
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                opacity="0.3"
+                d="M10 4H21C21.6 4 22 4.4 22 5V7H10V4Z"
+                fill="currentColor"
+              ></path>
+              <path
+                d="M10.4 3.60001L12 6H21C21.6 6 22 6.4 22 7V19C22 19.6 21.6 20 21 20H3C2.4 20 2 19.6 2 19V4C2 3.4 2.4 3 3 3H9.20001C9.70001 3 10.2 3.20001 10.4 3.60001ZM16 11.6L12.7 8.29999C12.3 7.89999 11.7 7.89999 11.3 8.29999L8 11.6H11V17C11 17.6 11.4 18 12 18C12.6 18 13 17.6 13 17V11.6H16Z"
+                fill="currentColor"
+              ></path>
+              <path
+                opacity="0.3"
+                d="M11 11.6V17C11 17.6 11.4 18 12 18C12.6 18 13 17.6 13 17V11.6H11Z"
+                fill="currentColor"
+              ></path>
+            </svg>
+          </span>
+
+          Selecionar Pasta
+        </button>
+
+        <button
+          id="sync-again-btn"
+          class="swal2-confirm btn btn-light"
+          style="display: none"
+        >
+          Sync Folder Again
+        </button>
+      </div>
+      <div class="text-center d-flex align-items-center position-relative">
+        <span
+          id="spinner"
+          class="spinner-border text-primary me-3"
+          role="status"
+          style="display: none"
+        ></span>
+        <span
+          style="display: none"
+          class="text-muted fs-6 fw-semibold"
+          id="loading-text"
+          >Carregando...</span
+        >
+      </div>
+      <div class="text-center p-1 text-muted fw-bold">
+        <p id="folder-selected" style="display: none">
+          Folder selected: <span id="folder-name"></span>
+        </p>
+
+        <div class="min-w-125px">
+          <span
+            class="badge badge-light-primary flex-shrink-0 align-self-center py-3 px-4 fs-7"
+            ><span id="folder-size"></span
+          ></span>
+        </div>
+
+        <div id="message" class="text-center mt-2"></div>
+      </div>
+    </div>
+
+    <script>
+      const { ipcRenderer } = require('electron');
+      let folderPath = null;
+
+      document
+        .getElementById('sync-btn')
+        .addEventListener('click', async () => {
+          folderPath = await ipcRenderer.invoke('open-folder-dialog');
+          if (folderPath) {
+            const result = await ipcRenderer.invoke('sync-folder', folderPath);
+            document.getElementById('message').innerText =
+              'Pasta Sincronizando';
+            document.getElementById('sync-btn').style.display = 'none';
+            document.getElementById('sync-again-btn').style.display = 'block';
+            document.getElementById('folder-selected').style.display = 'block';
+            document.getElementById('folder-name').innerText = folderPath;
+          }
+        });
+
+      document
+        .getElementById('sync-again-btn')
+        .addEventListener('click', async () => {
+          if (folderPath) {
+            const result = await ipcRenderer.invoke('sync-folder', folderPath);
+            document.getElementById('message').innerText =
+              'Pasta Sincronizando';
+          }
+        });
+
+      let hideSpinnerTimeout;
+      let activeUpdates = 0;
+
+      function customLog(message) {
+        const messageDiv = document.getElementById('message');
+        messageDiv.innerText = message;
+
+        const spinner = document.getElementById('spinner');
+        const loadingText = document.getElementById('loading-text');
+
+        if (message.includes('Updating')) {
+          activeUpdates++;
+
+          // Show the spinner and loading text if not visible
+          if (spinner.style.display === 'none') {
+            spinner.style.display = 'inline-block';
+            loadingText.style.display = 'inline';
+          }
+        } else {
+          activeUpdates = Math.max(0, activeUpdates - 1);
+        }
+
+        // Clear the previous timeout if it exists
+        if (hideSpinnerTimeout) {
+          clearTimeout(hideSpinnerTimeout);
+        }
+
+        // Hide the spinner and loading text after 5 seconds of inactivity
+        hideSpinnerTimeout = setTimeout(() => {
+          if (activeUpdates === 0) {
+            spinner.style.display = 'none';
+            loadingText.style.display = 'none';
+          }
+        }, 5000);
+      }
+      ipcRenderer.on('update-message', (event, message, totalSize) => {
+        customLog(message);
+        if (totalSize) {
+          const folderSizeElement = document.getElementById('folder-size');
+          folderSizeElement.textContent = `Folder size: ${(
+            totalSize /
+            (1024 * 1024)
+          ).toFixed(2)} MB`;
+          folderSizeElement.style.display = 'block';
+        }
+      });
+
+      ipcRenderer.on('folder-uploaded', (event, totalSize) => {
+        if (totalSize) {
+          const folderSizeElement = document.getElementById('folder-size');
+          folderSizeElement.textContent = `Folder size: ${(
+            totalSize /
+            (1024 * 1024)
+          ).toFixed(2)} MB`;
+          folderSizeElement.style.display = 'block';
+        }
+      });
+    </script>
+  </body>
+</html>

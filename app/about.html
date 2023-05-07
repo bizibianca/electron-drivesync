@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css?family=Inter:300,400,500,600,700"
+    />
+
+    <link href="../css/style.bundle.css" rel="stylesheet" type="text/css" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- <link rel="stylesheet" href="css/all.min.css" />
+    <link rel="stylesheet" href="css/materialize.min.css" />
+    <link rel="stylesheet" href="css/style.css" /> -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css"
+      integrity="sha384-56AX8X0luydmkuLAh6UduxFbUW8Eh2i+YJ9gWWx8X2QoQri33AUR7VbG5f8XI2TF"
+      crossorigin="anonymous"
+    />
+    <title>About HM DriveSync</title>
+  </head>
+  <body style="user-select: none; -webkit-app-region: drag">
+    <div class="mt-10 card h-xl-100" dir="ltr">
+      <div class="card-body d-flex flex-column flex-center">
+        <div class="mb-3">
+          <h1 class="fw-semibold text-gray-800 text-center lh-lg">
+            HM Drive
+            <span class="fw-bolder">Sync</span>
+          </h1>
+
+          <div class="py-1 text-center">
+            <img
+              src="../assets/icons/Icon.png"
+              class="theme-light-show w-100px"
+              alt=""
+            />
+          </div>
+        </div>
+
+        <div id="kt_job_1_1" class="collapse show fs-6 ms-1">
+          <!--begin::Item-->
+          <div class="mb-4">
+            <!--begin::Item-->
+            <div class="d-flex align-items-center mb-n1">
+              <!--begin::Bullet-->
+              <span class="bullet me-3"></span>
+              <!--end::Bullet-->
+              <!--begin::Label-->
+              <div class="text-gray-600 fw-semibold fs-6">
+                Developer: Candice Horie
+              </div>
+              <!--end::Label-->
+            </div>
+            <!--end::Item-->
+          </div>
+          <!--end::Item-->
+          <!--begin::Item-->
+          <div class="mb-4">
+            <!--begin::Item-->
+            <div class="d-flex align-items-center mb-n1">
+              <!--begin::Bullet-->
+              <span class="bullet me-3"></span>
+              <!--end::Bullet-->
+              <!--begin::Label-->
+              <div id="app-version" class="text-gray-600 fw-semibold fs-6">
+                Version:
+              </div>
+              <!--end::Label-->
+            </div>
+            <!--end::Item-->
+          </div>
+          <!--end::Item-->
+          <!--begin::Item-->
+        </div>
+      </div>
+    </div>
+    <script>
+      const { ipcRenderer } = require('electron');
+
+      async function setAppVersion() {
+        const appVersion = await ipcRenderer.invoke('get-app-version');
+        document.getElementById('app-version').innerText += appVersion;
+      }
+
+      setAppVersion();
+    </script>
+  </body>
+</html>

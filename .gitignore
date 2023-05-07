@@ -1,0 +1,9 @@
+node_modules/
+release-builds/
+private/
+dist/
+hgdriveapi-749378c3b8de.json
+.env
+package.json
+package-lock.json
+index.js
